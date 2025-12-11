@@ -6,6 +6,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -19,13 +20,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # ensure expo and firebase CLIs are available
+      - name: Install global CLIs
+        run: |
+          npm install -g expo-cli firebase-tools
+
+      - name: Show Node / NPM / Expo versions
+        run: |
+          node --version
+          npm --version
+          expo --version
+          firebase --version
+
       - name: Build web (Expo export)
         run: |
+          # If your project has a script like `npm run build:web` use that instead.
           npx expo export --platform web --output-dir web-build
+        env:
+          EXPO_NO_DOCTOR: 1
+
+      - name: List web-build contents
+        run: |
+          ls -la web-build || true
 
       - name: Deploy to Firebase Hosting
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
-          npm install -g firebase-tools
-          firebase deploy --only hosting
+          firebase deploy --only hosting --token "$FIREBASE_TOKEN"
