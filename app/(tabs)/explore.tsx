@@ -1,112 +1,216 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import {
+  Linking,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
 
 export default function TabTwoScreen() {
+  const { width } = useWindowDimensions();
+  const isSmall = width < 700;
+
+  // Open links in new tab on web, external browser on native
+  const openExternal = (url: string) => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    Linking.openURL(url).catch(() => {
+      alert('Unable to open link right now.');
+    });
+  };
+
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
+      headerBackgroundColor={{ light: '#000', dark: '#000' }}
       headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
+        <View style={styles.headerWrapper}>
+          <Image
+            source={require('@/assets/images/artist.png')}
+            style={styles.headerImage}
+            contentFit="cover"
+          />
+          {/* subtle gradient to improve contrast */}
+          <LinearGradient
+            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.45)']}
+            style={styles.headerGradient}
+          />
+        </View>
+      }
+    >
+      {/* Black info card */}
+      <ThemedView style={styles.blackCard}>
+        <ThemedText type="title" style={styles.artistName}>
+          Kushlopari Arts
         </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+
+        <ThemedText type="default" style={styles.subtitle}>
+          Traditional & Contemporary Art
         </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
+
+        <ThemedText style={styles.description}>
+          I was passionate about art and craft since my childhood days and this led me to
+          start my own venture. I am handling all the aspects of this business.
+          Open 24 hours.
         </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
+
+        {/* Social Buttons: responsive */}
+        <View style={[styles.socialRow, isSmall ? styles.socialRowStack : null]}>
+          <TouchableOpacity
+            style={[styles.socialButton, isSmall ? styles.socialButtonFull : null]}
+            onPress={() => openExternal('https://www.facebook.com/kushalopari')}
+            activeOpacity={0.85}
+            accessibilityLabel="Open Facebook"
+          >
+            <Ionicons name="logo-facebook" size={18} color="#fff" style={styles.iconLeft} />
+            <ThemedText style={styles.socialText}>Facebook</ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.socialButton, isSmall ? styles.socialButtonFull : null]}
+            onPress={() => openExternal('https://www.instagram.com/kushalopari/')}
+            activeOpacity={0.85}
+            accessibilityLabel="Open Instagram"
+          >
+            <Ionicons name="logo-instagram" size={18} color="#fff" style={styles.iconLeft} />
+            <ThemedText style={styles.socialText}>Instagram</ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.socialButton, isSmall ? styles.socialButtonFull : null]}
+            onPress={() => openExternal('https://www.google.com/viewer/place?mid=/g/11r9vxfc66')}
+            activeOpacity={0.85}
+            accessibilityLabel="Open Google"
+          >
+            <Ionicons name="location-outline" size={18} color="#fff" style={styles.iconLeft} />
+            <ThemedText style={styles.socialText}>Google</ThemedText>
+          </TouchableOpacity>
+        </View>
+
+        {/* JustDial Link */}
+        <View style={{ marginTop: 16 }}>
+          <TouchableOpacity
+            onPress={() =>
+              openExternal(
+                'https://www.justdial.com/Hyderabad/Kushalopari-Arts-Opposite-Sbi-Bank-Sri-Ram-Nagar-Kondapur/040PXX40-XX40-220921151842-E6A7_BZDET'
+              )
+            }
+            accessibilityLabel="View on JustDial"
+          >
+            <ThemedText type="link" style={styles.justDialText}>
+              View on JustDial
             </ThemedText>
-          ),
-        })}
-      </Collapsible>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  /* header wrapper used so gradient can overlay the image */
+  headerWrapper: {
+    width: '100%',
+    height: 300,
+    position: 'relative',
   },
-  titleContainer: {
+  headerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  headerGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '50%',
+  },
+
+  /* Black card section */
+  blackCard: {
+    backgroundColor: '#000',
+    padding: 22,
+    marginHorizontal: 12,
+    marginVertical: 18,
+    borderRadius: 18,
+    // subtle gold border for premium look
+    borderWidth: 1,
+    borderColor: 'rgba(184,134,11,0.06)',
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+
+  artistName: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+
+  subtitle: {
+    color: '#cfcfcf',
+    marginBottom: 12,
+  },
+
+  description: {
+    color: '#e6e6e6',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+
+  /* Social row */
+  socialRow: {
     flexDirection: 'row',
-    gap: 8,
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  socialRowStack: {
+    flexDirection: 'column',
+    gap: 10,
+  },
+
+  socialButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 120,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#1f1f1f',
+    justifyContent: 'center',
+  },
+  socialButtonFull: {
+    width: '100%',
+  },
+
+  iconLeft: {
+    marginRight: 10,
+  },
+
+  socialText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+
+  justDialText: {
+    color: '#FFD700',
+    fontSize: 14,
+    marginTop: 4,
   },
 });
