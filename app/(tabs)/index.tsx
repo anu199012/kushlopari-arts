@@ -10,17 +10,40 @@ import {
   Easing,
   FlatList,
   Image,
+  Platform,
   Pressable,
+  StyleSheet,
   Text,
   TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { db } from "../../src/firebaseConfig";
+
+// ===== Ignore ONLY the noisy pointerEvents warning on Web =====
+if (
+  typeof global !== "undefined" &&
+  global?.process?.env?.NODE_ENV !== "production"
+) {
+  const _warn = console.warn;
+  console.warn = (...args) => {
+    try {
+      if (
+        typeof args[0] === "string" &&
+        args[0].includes("props.pointerEvents is deprecated")
+      ) {
+        return; // ignore this warning only
+      }
+    } catch {}
+    _warn(...args);
+  };
+}
+// =================================================================
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const HORIZONTAL_PADDING = 16 * 2;
+const HORIZONTAL_PADDING = 32;
 const GAP = 12;
 const MIN_CARD_WIDTH = 140;
 const MAX_COLUMNS = 6;
@@ -35,48 +58,64 @@ export default function HomeScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
-  // ✅ Gentle motion refs per card
   const floatAnims = useRef(new Map<string, Animated.ValueXY>()).current;
 
-  // ✅ Fetch data
+  // ========== FETCH DATA ==========
   useEffect(() => {
     const fetch = async () => {
-      const snap = await getDocs(collection(db, "categories"));
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      try {
+        const snap = await getDocs(collection(db, "categories"));
+        const list: any[] = [];
+        snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
 
-      const resolved = await Promise.all(
-        list.map(async (item) => {
-          if (!item.imageUrl) return item;
-          try {
-            const url =
-              item.imageUrl.startsWith("http")
+        const resolved = await Promise.all(
+          list.map(async (item) => {
+            if (!item.imageUrl) return item;
+
+            try {
+              const url = item.imageUrl.startsWith("http")
                 ? item.imageUrl
                 : await getDownloadURL(
                     ref(storage, item.imageUrl.replace(/^gs:\/\/[^/]+\//, ""))
                   );
-            return { ...item, thumbnailImage: url };
-          } catch {
-            return item;
+              return { ...item, thumbnailImage: url };
+            } catch {
+              return item;
+            }
+          })
+        );
+
+        // init float animation values
+        resolved.forEach((item) => {
+          if (!floatAnims.has(item.id)) {
+            floatAnims.set(item.id, new Animated.ValueXY({ x: 0, y: 0 }));
           }
-        })
-      );
+        });
 
-      // init gentle motion for each card
-      resolved.forEach((item, index) => {
-        if (!floatAnims.has(item.id)) {
-          floatAnims.set(item.id, new Animated.ValueXY({ x: 0, y: 0 }));
-        }
-      });
+        // === SET DATA (and debug if any item label is ".") ===
+        setData(resolved);
 
-      setData(resolved);
-      setLoading(false);
+        // TEMP DEBUG: if any category label is exactly ".", it will log the whole item
+        resolved.forEach(item => {
+          const label = String(item.name ?? item.title ?? item.categoryName ?? item.id ?? "").trim();
+          if (label === ".") {
+            console.warn("DEBUG: found dot item in categories:", item);
+          }
+        });
+        // ====================================================
+
+      } catch (err) {
+        console.warn("fetch categories error:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetch();
   }, [storage]);
+  // =================================
 
-  // ✅ Gentle floating animation (illusion of life)
+  // ===== FLOATING ANIMATION =====
   useEffect(() => {
     if (!data.length) return;
     if (hoveredId || searchText.trim()) return;
@@ -87,8 +126,7 @@ export default function HomeScreen() {
       const anim = floatAnims.get(item.id);
       if (!anim) return;
 
-      // tiny varied movement
-      const dx = ((index % 3) - 1) * 4; // -4, 0, +4
+      const dx = ((index % 3) - 1) * 4;
       const dy = ((index % 4) - 1.5) * 4;
 
       animations.push(
@@ -98,13 +136,13 @@ export default function HomeScreen() {
               toValue: { x: dx, y: dy },
               duration: 7000,
               easing: Easing.inOut(Easing.ease),
-              useNativeDriver: true,
+              useNativeDriver: Platform.OS !== "web",
             }),
             Animated.timing(anim, {
               toValue: { x: 0, y: 0 },
               duration: 7000,
               easing: Easing.inOut(Easing.ease),
-              useNativeDriver: true,
+              useNativeDriver: Platform.OS !== "web",
             }),
           ])
         )
@@ -118,12 +156,14 @@ export default function HomeScreen() {
       floatAnims.forEach((anim) => anim.setValue({ x: 0, y: 0 }));
     };
   }, [data, hoveredId, searchText]);
+  // =================================
 
+  // ===== RESPONSIVE COLUMNS =====
   const computeNumColumns = () => {
-    const available =
-      Math.max(width, SCREEN_WIDTH) - HORIZONTAL_PADDING;
+    const available = Math.max(width, SCREEN_WIDTH) - HORIZONTAL_PADDING;
     const ideal = Math.floor(available / (MIN_CARD_WIDTH + GAP));
-    return Math.min(Math.max(ideal, 4), MAX_COLUMNS);
+    const minCols = width < 480 ? 2 : 3;
+    return Math.min(Math.max(ideal, minCols), MAX_COLUMNS);
   };
 
   const numColumns = computeNumColumns();
@@ -135,12 +175,13 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "black", alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color="white" />
+      <View style={styles.loadingWrap}>
+        <ActivityIndicator size="large" color="#fff" />
       </View>
     );
   }
 
+  // ===== RENDER ITEM =====
   const renderItem = ({ item }: { item: any }) => {
     const floatAnim = floatAnims.get(item.id);
 
@@ -153,11 +194,10 @@ export default function HomeScreen() {
 
     return (
       <Animated.View
-        style={{
-          transform: floatAnim
-            ? floatAnim.getTranslateTransform()
-            : undefined,
-        }}
+        style={[
+          floatAnim ? { transform: floatAnim.getTranslateTransform() } : undefined,
+          { marginBottom: GAP },
+        ]}
       >
         <Pressable
           onHoverIn={() => setHoveredId(String(item.id))}
@@ -209,35 +249,61 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "black", paddingTop: 32, paddingHorizontal: 16 }}>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
-        <Text style={{ color: "white", fontSize: 22, fontWeight: "700" }}>
-          Kushlopari Arts 🎨
-        </Text>
-        <TextInput
-          value={searchText}
-          onChangeText={setSearchText}
-          placeholder="Search…"
-          placeholderTextColor="#888"
-          style={{
-            width: 180,
-            height: 34,
-            borderRadius: 8,
-            paddingHorizontal: 10,
-            backgroundColor: "#222",
-            color: "#fff",
-          }}
-        />
+    <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>Kushlopari Arts 🎨</Text>
+
+          <View style={{ marginLeft: 12, flex: 1, maxWidth: 260 }}>
+            <TextInput
+              value={searchText}
+              onChangeText={setSearchText}
+              placeholder="Search…"
+              placeholderTextColor="#888"
+              style={styles.searchInput}
+            />
+          </View>
+        </View>
       </View>
 
       <FlatList
         data={data}
         renderItem={renderItem}
         keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
         numColumns={numColumns}
-        columnWrapperStyle={{ justifyContent: "space-between", marginBottom: GAP }}
+        columnWrapperStyle={{
+          justifyContent: "space-between",
+          marginBottom: GAP,
+        }}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        initialNumToRender={12}
       />
-    </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingWrap: {
+    flex: 1,
+    backgroundColor: "black",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  title: { color: "white", fontSize: 22, fontWeight: "700" },
+  searchInput: {
+    width: "100%",
+    height: 36,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    backgroundColor: "#222",
+    color: "#fff",
+  },
+});
