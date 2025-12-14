@@ -9,8 +9,8 @@ const firebaseConfig = {
   authDomain: "kushalopariarts-e5d7f.firebaseapp.com",
   projectId: "kushalopariarts-e5d7f",
   storageBucket: "kushalopariarts-e5d7f.firebasestorage.app",
-  messagingSenderId: "58981129406",
-  appId: "1:58981129406:web:3dd8ac4b3e62ceb77fd2ef"
+  messagingSenderId: "G-EL25Y1792B",
+  appId: "1:58981129406:web:1:58981129406:web:3dd8ac4b3e62ceb77fd2ef"
 };
 
 // Initialize Firebase

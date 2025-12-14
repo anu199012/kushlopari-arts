@@ -1,7 +1,5 @@
-// app/(tabs)/index.tsx
 import { useRouter } from "expo-router";
 import { collection, getDocs } from "firebase/firestore";
-import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -21,6 +19,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { db } from "../../src/firebaseConfig";
 
+console.log("Connected projectId:", db.app.options.projectId);
+
 // ===== Ignore ONLY the noisy pointerEvents warning on Web =====
 if (
   typeof global !== "undefined" &&
@@ -33,7 +33,7 @@ if (
         typeof args[0] === "string" &&
         args[0].includes("props.pointerEvents is deprecated")
       ) {
-        return; // ignore this warning only
+        return;
       }
     } catch {}
     _warn(...args);
@@ -54,7 +54,6 @@ export default function HomeScreen() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
 
-  const storage = getStorage();
   const router = useRouter();
   const { width } = useWindowDimensions();
 
@@ -68,22 +67,11 @@ export default function HomeScreen() {
         const list: any[] = [];
         snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
 
-        const resolved = await Promise.all(
-          list.map(async (item) => {
-            if (!item.imageUrl) return item;
-
-            try {
-              const url = item.imageUrl.startsWith("http")
-                ? item.imageUrl
-                : await getDownloadURL(
-                    ref(storage, item.imageUrl.replace(/^gs:\/\/[^/]+\//, ""))
-                  );
-              return { ...item, thumbnailImage: url };
-            } catch {
-              return item;
-            }
-          })
-        );
+        // use imageUrl directly for cards
+        const resolved = list.map((item) => ({
+          ...item,
+          thumbnailImage: item.imageUrl || null,
+        }));
 
         // init float animation values
         resolved.forEach((item) => {
@@ -92,18 +80,7 @@ export default function HomeScreen() {
           }
         });
 
-        // === SET DATA (and debug if any item label is ".") ===
         setData(resolved);
-
-        // TEMP DEBUG: if any category label is exactly ".", it will log the whole item
-        resolved.forEach(item => {
-          const label = String(item.name ?? item.title ?? item.categoryName ?? item.id ?? "").trim();
-          if (label === ".") {
-            console.warn("DEBUG: found dot item in categories:", item);
-          }
-        });
-        // ====================================================
-
       } catch (err) {
         console.warn("fetch categories error:", err);
       } finally {
@@ -112,7 +89,7 @@ export default function HomeScreen() {
     };
 
     fetch();
-  }, [storage]);
+  }, []);
   // =================================
 
   // ===== FLOATING ANIMATION =====
@@ -190,12 +167,15 @@ export default function HomeScreen() {
 
     const active =
       hoveredId === String(item.id) ||
-      (searchText && name.toLowerCase().includes(searchText.toLowerCase()));
+      (searchText &&
+        name.toLowerCase().includes(searchText.toLowerCase()));
 
     return (
       <Animated.View
         style={[
-          floatAnim ? { transform: floatAnim.getTranslateTransform() } : undefined,
+          floatAnim
+            ? { transform: floatAnim.getTranslateTransform() }
+            : undefined,
           { marginBottom: GAP },
         ]}
       >
@@ -267,6 +247,7 @@ export default function HomeScreen() {
       </View>
 
       <FlatList
+        style={{ flex: 1 }}
         data={data}
         renderItem={renderItem}
         keyExtractor={(item) => String(item.id)}
@@ -277,7 +258,7 @@ export default function HomeScreen() {
           marginBottom: GAP,
         }}
         showsVerticalScrollIndicator={false}
-        removeClippedSubviews={true}
+        removeClippedSubviews
         initialNumToRender={12}
       />
     </SafeAreaView>
