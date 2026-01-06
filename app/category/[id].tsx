@@ -279,7 +279,18 @@ export default function CategoryDetailScreen() {
       </SafeView>
 
       {/* Image Card Area (single full-width image) */}
-      <SafeView style={[styles.cardArea, { height: CARD_HEIGHT }]}>
+      <SafeView
+  style={[
+    styles.cardArea,
+    {
+      height: CARD_HEIGHT,
+      marginTop: 16,
+      marginBottom: 8,
+    },
+  ]}
+>
+
+
         {imagesForList.length === 0 ? (
           <SafeView style={[styles.card, styles.emptyCard]}>
             <Text style={{ color: "#888" }}>No images available</Text>
@@ -481,13 +492,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   backText: { color: "#fff" },
-  header: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+
+header: {
+  paddingHorizontal: 16,
+  paddingTop: 16,
+  paddingBottom: 12,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+
+
+
+
+
   headerBack: { padding: 6 },
   headerBackText: { color: "#fff", fontSize: 14 },
   headerTitle: { color: "#fff", fontSize: 18, fontWeight: "700", flex: 1, textAlign: "center" },
