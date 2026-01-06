@@ -1,4 +1,5 @@
 // app/category/[id].tsx
+
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
@@ -28,6 +29,9 @@ import {
 } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { db } from "../../src/firebaseConfig";
+
+
+
 
 const HORIZONTAL_PADDING = 0;
 const CARD_ASPECT = 0.55; // relative height proportion (you can change)
@@ -113,6 +117,7 @@ export default function CategoryDetailScreen() {
           }
           return;
         }
+
 
         const data = snap.data();
         if (!mounted) return;
