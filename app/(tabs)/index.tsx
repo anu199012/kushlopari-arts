@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { collection, getDocs } from "firebase/firestore";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -35,7 +35,7 @@ if (
       ) {
         return;
       }
-    } catch {}
+    } catch { }
     _warn(...args);
   };
 }
@@ -92,10 +92,33 @@ export default function HomeScreen() {
   }, []);
   // =================================
 
+  // ===== SORTED DATA (Matches First) =====
+  const sortedData = useMemo(() => {
+    if (!searchText.trim()) return data;
+
+    const lower = searchText.toLowerCase();
+    const matches: any[] = [];
+    const others: any[] = [];
+
+    data.forEach((item) => {
+      const name =
+        item.name ?? item.title ?? item.categoryName ?? String(item.id);
+      if (name.toLowerCase().includes(lower)) {
+        matches.push(item);
+      } else {
+        others.push(item);
+      }
+    });
+
+    return [...matches, ...others];
+  }, [data, searchText]);
+  // =======================================
+
   // ===== FLOATING ANIMATION =====
   useEffect(() => {
     if (!data.length) return;
-    if (hoveredId || searchText.trim()) return;
+    // Animation only pauses on Hover, continues during Search
+    if (hoveredId) return;
 
     const animations: Animated.CompositeAnimation[] = [];
 
@@ -132,7 +155,7 @@ export default function HomeScreen() {
       animations.forEach((a) => a.stop());
       floatAnims.forEach((anim) => anim.setValue({ x: 0, y: 0 }));
     };
-  }, [data, hoveredId, searchText]);
+  }, [data, hoveredId]); // Removed searchText from dependency
   // =================================
 
   // ===== RESPONSIVE COLUMNS =====
@@ -190,39 +213,36 @@ export default function HomeScreen() {
           }
           style={{
             width: cardWidth,
-            height: cardHeight,
+            // height: cardHeight, // Let height be determined by content
             backgroundColor: "#111",
             borderRadius: 12,
             overflow: "hidden",
-            borderWidth: active ? 1 : 0,
-            borderColor: "#fff",
+            borderColor: active ? "#fff" : "transparent",
+            borderWidth: 1,
+            paddingBottom: 8, // Add some bottom padding for the text
           }}
         >
           {item.thumbnailImage && (
             <Image
               source={{ uri: item.thumbnailImage }}
-              style={{ width: "100%", height: "100%" }}
+              style={{ width: "100%", height: cardHeight }} // Use fixed height for image
               resizeMode="cover"
             />
           )}
 
-          {active && (
-            <View
-              style={{
-                position: "absolute",
-                bottom: 10,
-                left: 10,
-                right: 10,
-                padding: 6,
-                backgroundColor: "white",
-                borderRadius: 6,
-              }}
+          <View
+            style={{
+              paddingHorizontal: 8,
+              marginTop: 8,
+            }}
+          >
+            <Text
+              style={{ color: "white", fontSize: 13, fontWeight: "600" }}
+              numberOfLines={2}
             >
-              <Text style={{ color: "black", fontSize: 12 }} numberOfLines={2}>
-                {name}
-              </Text>
-            </View>
-          )}
+              {name}
+            </Text>
+          </View>
         </Pressable>
       </Animated.View>
     );
@@ -248,7 +268,7 @@ export default function HomeScreen() {
 
       <FlatList
         style={{ flex: 1 }}
-        data={data}
+        data={sortedData}
         renderItem={renderItem}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
