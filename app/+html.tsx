@@ -36,7 +36,7 @@ export default function Root({ children }: PropsWithChildren) {
                     __html: `
           @font-face {
             font-family: 'Ionicons';
-            src: url('https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.ttf?v=5.5.2') format('truetype');
+            src: url('/fonts/Ionicons.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
           }
