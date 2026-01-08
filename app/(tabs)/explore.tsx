@@ -40,19 +40,11 @@ export default function TabTwoScreen() {
             style={styles.headerImage}
             contentFit="cover"
           />
-          {/* subtle gradient to improve contrast */}
+          {/* subtle gradient to improve contrast if needed later */}
           <LinearGradient
-            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.7)']}
+            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.3)']}
             style={styles.headerGradient}
           />
-          <View style={styles.headerTextOverlay}>
-            <ThemedText type="title" style={styles.artistName}>
-              Kushlopari Arts
-            </ThemedText>
-            <ThemedText type="default" style={styles.subtitle}>
-              Traditional & Contemporary Art
-            </ThemedText>
-          </View>
         </View>
       }
     >
@@ -121,7 +113,7 @@ const styles = StyleSheet.create({
   /* header wrapper used so gradient can overlay the image */
   headerWrapper: {
     width: '100%',
-    height: 300,
+    height: 350,
     position: 'relative',
   },
   headerImage: {
@@ -133,13 +125,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: '60%',
-  },
-  headerTextOverlay: {
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
+    height: '30%',
   },
 
   /* Black card section */
