@@ -42,22 +42,22 @@ export default function TabTwoScreen() {
           />
           {/* subtle gradient to improve contrast */}
           <LinearGradient
-            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.45)']}
+            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.7)']}
             style={styles.headerGradient}
           />
+          <View style={styles.headerTextOverlay}>
+            <ThemedText type="title" style={styles.artistName}>
+              Kushlopari Arts
+            </ThemedText>
+            <ThemedText type="default" style={styles.subtitle}>
+              Traditional & Contemporary Art
+            </ThemedText>
+          </View>
         </View>
       }
     >
       {/* Black info card */}
       <ThemedView style={styles.blackCard}>
-        <ThemedText type="title" style={styles.artistName}>
-          Kushlopari Arts
-        </ThemedText>
-
-        <ThemedText type="default" style={styles.subtitle}>
-          Traditional & Contemporary Art
-        </ThemedText>
-
         <ThemedText style={styles.description}>
           I was passionate about art and craft since my childhood days and this led me to
           start my own venture. I am handling all the aspects of this business.
@@ -67,7 +67,7 @@ export default function TabTwoScreen() {
         {/* Social Buttons: responsive */}
         <View style={[styles.socialRow, isSmall ? styles.socialRowStack : null]}>
           <TouchableOpacity
-            style={[styles.socialButton, isSmall ? styles.socialButtonFull : null]}
+            style={[styles.socialButton, { backgroundColor: '#1877F2' }, isSmall ? styles.socialButtonFull : null]}
             onPress={() => openExternal('https://www.facebook.com/kushalopari')}
             activeOpacity={0.85}
             accessibilityLabel="Open Facebook"
@@ -77,7 +77,7 @@ export default function TabTwoScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.socialButton, isSmall ? styles.socialButtonFull : null]}
+            style={[styles.socialButton, { backgroundColor: '#E4405F' }, isSmall ? styles.socialButtonFull : null]}
             onPress={() => openExternal('https://www.instagram.com/kushalopari/')}
             activeOpacity={0.85}
             accessibilityLabel="Open Instagram"
@@ -87,7 +87,7 @@ export default function TabTwoScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.socialButton, isSmall ? styles.socialButtonFull : null]}
+            style={[styles.socialButton, { backgroundColor: '#4285F4' }, isSmall ? styles.socialButtonFull : null]}
             onPress={() => openExternal('https://www.google.com/viewer/place?mid=/g/11r9vxfc66')}
             activeOpacity={0.85}
             accessibilityLabel="Open Google"
@@ -133,7 +133,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: '50%',
+    height: '60%',
+  },
+  headerTextOverlay: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
   },
 
   /* Black card section */

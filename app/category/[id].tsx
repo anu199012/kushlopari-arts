@@ -580,11 +580,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: "45%",
     zIndex: 30,
-    padding: 8,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    borderRadius: 20,
+    padding: 12,
   },
-  arrowText: { color: "#fff", fontSize: 28 },
+  arrowText: {
+    color: "#fff",
+    fontSize: 48,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10
+  },
   indexBadge: {
     position: "absolute",
     right: 16,
