@@ -128,15 +128,15 @@ export default function CategoryDetailScreen() {
         let imagesArray: string[] =
           Array.isArray(rawImages)
             ? rawImages
-                .map((it: any) =>
-                  typeof it === "string" ? it : it?.url ?? it?.downloadURL ?? it?.path ?? null
-                )
-                .filter(Boolean)
+              .map((it: any) =>
+                typeof it === "string" ? it : it?.url ?? it?.downloadURL ?? it?.path ?? null
+              )
+              .filter(Boolean)
             : typeof rawImages === "string" && rawImages.includes(",")
-            ? rawImages.split(",").map((p: string) => p.trim()).filter(Boolean)
-            : typeof rawImages === "string" && rawImages.length
-            ? [rawImages]
-            : [];
+              ? rawImages.split(",").map((p: string) => p.trim()).filter(Boolean)
+              : typeof rawImages === "string" && rawImages.length
+                ? [rawImages]
+                : [];
 
         if ((!imagesArray || imagesArray.length === 0) && data.imageUrl) {
           imagesArray = [data.imageUrl];
@@ -280,15 +280,15 @@ export default function CategoryDetailScreen() {
 
       {/* Image Card Area (single full-width image) */}
       <SafeView
-  style={[
-    styles.cardArea,
-    {
-      height: CARD_HEIGHT,
-      marginTop: 16,
-      marginBottom: 8,
-    },
-  ]}
->
+        style={[
+          styles.cardArea,
+          {
+            height: CARD_HEIGHT,
+            marginTop: 16,
+            marginBottom: 8,
+          },
+        ]}
+      >
 
 
         {imagesForList.length === 0 ? (
@@ -456,6 +456,29 @@ function ZoomableImage({ uri, width, height, onTap }: { uri: string; width: numb
     }, 320);
   };
 
+  if (Platform.OS === "web") {
+    return (
+      <Animated.View style={{ width, height, alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+        <Pressable onPress={handlePress} style={{ width, height, alignItems: "center", justifyContent: "center" }}>
+          <Animated.Image
+            source={{ uri }}
+            style={[
+              {
+                width: width ?? 100,
+                height: height ?? 100,
+                transform: [{ scale: animatedScale }],
+              } as any,
+            ]}
+            resizeMode="contain"
+            onError={(e) => {
+              console.warn("Image load error:", e.nativeEvent?.error);
+            }}
+          />
+        </Pressable>
+      </Animated.View>
+    );
+  }
+
   return (
     <PinchGestureHandler onGestureEvent={onPinchEvent} onHandlerStateChange={onPinchStateChange}>
       <Animated.View style={{ width, height, alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
@@ -493,14 +516,14 @@ const styles = StyleSheet.create({
   },
   backText: { color: "#fff" },
 
-header: {
-  paddingHorizontal: 16,
-  paddingTop: 16,
-  paddingBottom: 12,
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-},
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
 
 
 
