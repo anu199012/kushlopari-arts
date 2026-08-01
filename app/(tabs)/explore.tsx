@@ -10,7 +10,9 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeader } from '@/components/app-header';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -31,7 +33,11 @@ export default function TabTwoScreen() {
   };
 
   return (
-    <ParallaxScrollView
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+        <AppHeader showBack />
+      </View>
+      <ParallaxScrollView
       headerBackgroundColor={{ light: '#000', dark: '#000' }}
       headerImage={
         <View style={styles.headerWrapper}>
@@ -106,6 +112,7 @@ export default function TabTwoScreen() {
         </View>
       </ThemedView>
     </ParallaxScrollView>
+    </SafeAreaView>
   );
 }
 

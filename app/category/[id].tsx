@@ -138,7 +138,34 @@ export default function CategoryDetailScreen() {
                 ? [rawImages]
                 : [];
 
-        if ((!imagesArray || imagesArray.length === 0) && data.imageUrl) {
+        // Cover photo (imageUrl) should always show first when opening a module
+        const cover =
+          data.imageUrl ??
+          data.coverUrl ??
+          data.coverImage ??
+          data.thumbnailUrl ??
+          null;
+
+        if (cover && typeof cover === "string") {
+          const alreadyFirst =
+            imagesArray.length > 0 &&
+            (imagesArray[0] === cover ||
+              imagesArray[0].includes(cover) ||
+              cover.includes(imagesArray[0]));
+          const alreadyIncluded = imagesArray.some(
+            (u) => u === cover || u.includes(cover) || cover.includes(u)
+          );
+          if (!alreadyIncluded) {
+            imagesArray = [cover, ...imagesArray];
+          } else if (!alreadyFirst) {
+            imagesArray = [
+              cover,
+              ...imagesArray.filter(
+                (u) => !(u === cover || u.includes(cover) || cover.includes(u))
+              ),
+            ];
+          }
+        } else if ((!imagesArray || imagesArray.length === 0) && data.imageUrl) {
           imagesArray = [data.imageUrl];
         }
 

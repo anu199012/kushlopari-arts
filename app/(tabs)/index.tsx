@@ -8,6 +8,7 @@ import {
   Easing,
   FlatList,
   Image,
+  Keyboard,
   Platform,
   Pressable,
   StyleSheet,
@@ -17,6 +18,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { AppHeader } from "@/components/app-header";
 import { db } from "../../src/firebaseConfig";
 
 console.log("Connected projectId:", db.app.options.projectId);
@@ -53,11 +56,16 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const searchRef = useRef<TextInput>(null);
 
   const floatAnims = useRef(new Map<string, Animated.ValueXY>()).current;
+
+  const getItemName = (item: any) =>
+    item.name ?? item.title ?? item.categoryName ?? String(item.id);
 
   // ========== FETCH DATA ==========
   useEffect(() => {
@@ -101,8 +109,7 @@ export default function HomeScreen() {
     const others: any[] = [];
 
     data.forEach((item) => {
-      const name =
-        item.name ?? item.title ?? item.categoryName ?? String(item.id);
+      const name = getItemName(item);
       if (name.toLowerCase().includes(lower)) {
         matches.push(item);
       } else {
@@ -111,6 +118,15 @@ export default function HomeScreen() {
     });
 
     return [...matches, ...others];
+  }, [data, searchText]);
+
+  const suggestions = useMemo(() => {
+    const q = searchText.trim().toLowerCase();
+    if (!q) return [];
+    return data
+      .map((item) => ({ id: String(item.id), name: getItemName(item) }))
+      .filter((item) => item.name.toLowerCase().includes(q))
+      .slice(0, 8);
   }, [data, searchText]);
   // =======================================
 
@@ -185,8 +201,7 @@ export default function HomeScreen() {
   const renderItem = ({ item }: { item: any }) => {
     const floatAnim = floatAnims.get(item.id);
 
-    const name =
-      item.name ?? item.title ?? item.categoryName ?? String(item.id);
+    const name = getItemName(item);
 
     const active =
       hoveredId === String(item.id) ||
@@ -248,22 +263,63 @@ export default function HomeScreen() {
     );
   };
 
+  const selectSuggestion = (item: { id: string; name: string }) => {
+    setSearchText("");
+    setShowSuggestions(false);
+    searchRef.current?.blur();
+    Keyboard.dismiss();
+    router.push({
+      pathname: "/category/[id]",
+      params: { id: item.id },
+    });
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
-      <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
-        <View style={styles.headerRow}>
-          <Text style={styles.title}>Kushlopari Arts 🎨</Text>
-
-          <View style={{ marginLeft: 12, flex: 1, maxWidth: 260 }}>
-            <TextInput
-              value={searchText}
-              onChangeText={setSearchText}
-              placeholder="Search…"
-              placeholderTextColor="#888"
-              style={styles.searchInput}
-            />
-          </View>
-        </View>
+      <View style={{ paddingHorizontal: 16, paddingTop: 12, zIndex: 20 }}>
+        <AppHeader
+          right={
+            <View style={styles.searchWrap}>
+              <TextInput
+                ref={searchRef}
+                value={searchText}
+                onChangeText={(text) => {
+                  setSearchText(text);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => {
+                  // Allow suggestion press to register before hiding
+                  setTimeout(() => setShowSuggestions(false), 150);
+                }}
+                placeholder="Search…"
+                placeholderTextColor="#888"
+                style={styles.searchInput}
+                returnKeyType="search"
+                autoCorrect={false}
+                autoCapitalize="none"
+              />
+              {showSuggestions && suggestions.length > 0 ? (
+                <View style={styles.suggestions}>
+                  {suggestions.map((item) => (
+                    <Pressable
+                      key={item.id}
+                      onPress={() => selectSuggestion(item)}
+                      style={({ pressed }) => [
+                        styles.suggestionRow,
+                        pressed && styles.suggestionPressed,
+                      ]}
+                    >
+                      <Text style={styles.suggestionText} numberOfLines={1}>
+                        {item.name}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          }
+        />
       </View>
 
       <FlatList
@@ -280,6 +336,12 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         removeClippedSubviews
         initialNumToRender={12}
+        keyboardShouldPersistTaps="handled"
+        onScrollBeginDrag={() => {
+          searchRef.current?.blur();
+          Keyboard.dismiss();
+          setShowSuggestions(false);
+        }}
       />
     </SafeAreaView>
   );
@@ -292,13 +354,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
+  searchWrap: {
+    width: "100%",
+    position: "relative",
+    zIndex: 30,
   },
-  title: { color: "white", fontSize: 22, fontWeight: "700" },
   searchInput: {
     width: "100%",
     height: 36,
@@ -306,5 +366,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: "#222",
     color: "#fff",
+  },
+  suggestions: {
+    position: "absolute",
+    top: 40,
+    left: 0,
+    right: 0,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#333",
+    overflow: "hidden",
+    maxHeight: 240,
+    zIndex: 40,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  suggestionRow: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#333",
+  },
+  suggestionPressed: {
+    backgroundColor: "#2a2a2a",
+  },
+  suggestionText: {
+    color: "#fff",
+    fontSize: 14,
   },
 });
