@@ -36,6 +36,7 @@ export default function AdminScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
+  const [statusIsError, setStatusIsError] = useState(false);
 
   const selected = categories.find((c) => c.id === selectedId) ?? null;
 
@@ -76,7 +77,7 @@ export default function AdminScreen() {
     if (Platform.OS === "web") {
       const input = document.createElement("input");
       input.type = "file";
-      input.accept = "image/*";
+      input.accept = "image/jpeg,image/png,image/webp,image/*";
       input.onchange = async () => {
         const file = input.files?.[0];
         if (!file || !selected) return;
@@ -88,15 +89,38 @@ export default function AdminScreen() {
     setStatus("File upload is supported on web admin for now.");
   };
 
-  const handleUpload = async (file: Blob & { name?: string }, mode: "gallery" | "cover") => {
+  const handleUpload = async (file: File, mode: "gallery" | "cover") => {
     if (!selected) return;
     setBusy(true);
-    setStatus("Uploading…");
+    setStatusIsError(false);
+    setStatus("Compressing image…");
     try {
+      const { compressImageForUpload, compressErrorMessage } = await import(
+        "@/src/imageCompress"
+      );
+      let compressed;
+      try {
+        compressed = await compressImageForUpload(file);
+      } catch (compressErr) {
+        setStatusIsError(true);
+        setStatus(compressErrorMessage(compressErr));
+        return;
+      }
+
+      setStatus(
+        `Uploading compressed image (${(
+          compressed.compressedBytes /
+          (1024 * 1024)
+        ).toFixed(2)} MB; was ${(
+          compressed.originalBytes /
+          (1024 * 1024)
+        ).toFixed(2)} MB)…`
+      );
+
       const url = await uploadCategoryImage(
         selected.id,
-        file,
-        file.name || "image.jpg"
+        compressed.blob,
+        compressed.fileName
       );
       if (mode === "cover") {
         await setCategoryCover(selected.id, url);
@@ -119,10 +143,23 @@ export default function AdminScreen() {
           selected.imageUrl
         );
       }
-      setStatus("Saved.");
+      setStatusIsError(false);
+      setStatus(
+        `Saved. Compressed ${(compressed.originalBytes / (1024 * 1024)).toFixed(
+          2
+        )} MB → ${(compressed.compressedBytes / (1024 * 1024)).toFixed(2)} MB.`
+      );
       await reload();
     } catch (err: any) {
-      setStatus(err?.message ?? "Upload failed. Check Auth + Storage rules.");
+      const msg = err?.message ?? "Upload failed. Check Auth + Storage rules.";
+      setStatusIsError(true);
+      if (/too large|size|413|entity/i.test(msg)) {
+        setStatus(
+          "Upload failed: image still too large. Please compress the image (JPG/WebP under 2 MB) and try again."
+        );
+      } else {
+        setStatus(msg);
+      }
     } finally {
       setBusy(false);
     }
@@ -295,6 +332,10 @@ export default function AdminScreen() {
                   <Text style={styles.secondaryBtnText}>Add gallery image</Text>
                 </Pressable>
               </View>
+              <Text style={styles.compressHint}>
+                Images are auto-compressed on upload. If you see an error, please
+                compress the image (JPG/WebP under ~2 MB) and try again.
+              </Text>
 
               <Text style={[styles.hint, { marginTop: 18 }]}>Gallery</Text>
               {(selected.images?.length ?? 0) === 0 ? (
@@ -326,7 +367,11 @@ export default function AdminScreen() {
               )}
             </>
           )}
-          {status ? <Text style={styles.status}>{status}</Text> : null}
+          {status ? (
+            <Text style={statusIsError ? styles.statusError : styles.status}>
+              {status}
+            </Text>
+          ) : null}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -445,6 +490,12 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 10,
   },
+  compressHint: {
+    color: "#888",
+    fontSize: 12,
+    marginTop: 8,
+    lineHeight: 18,
+  },
   emptyAdmin: {
     color: "#bbb",
     fontSize: 14,
@@ -472,4 +523,10 @@ const styles = StyleSheet.create({
   },
   deleteText: { color: "#ff7b7b", fontSize: 14 },
   status: { color: "#ccc", marginTop: 16, fontSize: 13 },
+  statusError: {
+    color: "#ff6b6b",
+    marginTop: 16,
+    fontSize: 13,
+    lineHeight: 18,
+  },
 });
