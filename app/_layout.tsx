@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -18,12 +18,20 @@ export default function CategoryLayout() {
     ...Ionicons.font,
   });
   const [showBrandSplash, setShowBrandSplash] = useState(true);
+  const pathname = usePathname();
+  const isAdminRoute = pathname?.includes('/admin');
 
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  useEffect(() => {
+    if (isAdminRoute) {
+      setShowBrandSplash(false);
+    }
+  }, [isAdminRoute]);
 
   const onBrandSplashFinish = useCallback(() => {
     setShowBrandSplash(false);
@@ -41,8 +49,8 @@ export default function CategoryLayout() {
             headerShown: false,
           }}
         />
-        {!showBrandSplash ? <OrderButton /> : null}
-        {showBrandSplash ? (
+        {!showBrandSplash && !isAdminRoute ? <OrderButton /> : null}
+        {showBrandSplash && !isAdminRoute ? (
           <BrandSplash ready={loaded} onFinish={onBrandSplashFinish} />
         ) : null}
       </View>

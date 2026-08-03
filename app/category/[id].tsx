@@ -320,7 +320,7 @@ export default function CategoryDetailScreen() {
 
         {imagesForList.length === 0 ? (
           <SafeView style={[styles.card, styles.emptyCard]}>
-            <Text style={{ color: "#888" }}>No images available</Text>
+            <Text style={{ color: "#888" }}>Images coming soon.</Text>
           </SafeView>
         ) : (
           <Animated.View style={{ opacity: fadeAnim, width: CARD_WIDTH }}>
