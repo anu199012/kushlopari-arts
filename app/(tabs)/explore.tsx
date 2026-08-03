@@ -20,6 +20,8 @@ import { ThemedView } from '@/components/themed-view';
 export default function TabTwoScreen() {
   const { width } = useWindowDimensions();
   const isSmall = width < 700;
+  // Square artist.png — size header so the full image fits without cropping
+  const headerHeight = Math.min(Math.max(width - 32, 280), 560);
 
   // Open links in new tab on web, external browser on native
   const openExternal = (url: string) => {
@@ -39,16 +41,16 @@ export default function TabTwoScreen() {
       </View>
       <ParallaxScrollView
       headerBackgroundColor={{ light: '#000', dark: '#000' }}
+      headerHeight={headerHeight}
       headerImage={
-        <View style={styles.headerWrapper}>
+        <View style={[styles.headerWrapper, { height: headerHeight }]}>
           <Image
             source={require('@/assets/images/artist.png')}
             style={styles.headerImage}
-            contentFit="cover"
+            contentFit="contain"
           />
-          {/* subtle gradient to improve contrast if needed later */}
           <LinearGradient
-            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.3)']}
+            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.35)']}
             style={styles.headerGradient}
           />
         </View>
@@ -93,21 +95,19 @@ export default function TabTwoScreen() {
             <Ionicons name="location-outline" size={18} color="#fff" style={styles.iconLeft} />
             <ThemedText style={styles.socialText}>Google</ThemedText>
           </TouchableOpacity>
-        </View>
 
-        {/* JustDial Link */}
-        <View style={{ marginTop: 16 }}>
           <TouchableOpacity
+            style={[styles.socialButton, { backgroundColor: '#F15A22' }, isSmall ? styles.socialButtonFull : null]}
             onPress={() =>
               openExternal(
                 'https://www.justdial.com/Hyderabad/Kushalopari-Arts-Opposite-Sbi-Bank-Sri-Ram-Nagar-Kondapur/040PXX40-XX40-220921151842-E6A7_BZDET'
               )
             }
-            accessibilityLabel="View on JustDial"
+            activeOpacity={0.85}
+            accessibilityLabel="Open JustDial"
           >
-            <ThemedText type="link" style={styles.justDialText}>
-              View on JustDial
-            </ThemedText>
+            <Ionicons name="business-outline" size={18} color="#fff" style={styles.iconLeft} />
+            <ThemedText style={styles.socialText}>JustDial</ThemedText>
           </TouchableOpacity>
         </View>
       </ThemedView>
@@ -120,8 +120,10 @@ const styles = StyleSheet.create({
   /* header wrapper used so gradient can overlay the image */
   headerWrapper: {
     width: '100%',
-    height: 350,
     position: 'relative',
+    backgroundColor: '#000',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerImage: {
     width: '100%',
@@ -174,6 +176,7 @@ const styles = StyleSheet.create({
   /* Social row */
   socialRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 12,
   },
@@ -183,7 +186,8 @@ const styles = StyleSheet.create({
   },
 
   socialButton: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 140,
     flexDirection: 'row',
     alignItems: 'center',
     minWidth: 120,
@@ -205,11 +209,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 15,
-  },
-
-  justDialText: {
-    color: '#FFD700',
-    fontSize: 14,
-    marginTop: 4,
   },
 });
