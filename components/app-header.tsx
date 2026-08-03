@@ -29,10 +29,10 @@ export function AppHeader({ right, showBack = false }: AppHeaderProps) {
             onPress={goHome}
             hitSlop={12}
             accessibilityRole="button"
-            accessibilityLabel="Back to home"
+            accessibilityLabel="Close"
             style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}
           >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
+            <Ionicons name="close" size={28} color="#fff" />
           </Pressable>
         ) : (
           <Pressable
