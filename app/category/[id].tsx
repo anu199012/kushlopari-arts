@@ -1,6 +1,7 @@
 // app/category/[id].tsx
 
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { doc, getDoc } from "firebase/firestore";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -277,8 +278,14 @@ export default function CategoryDetailScreen() {
   if (!category) {
     return (
       <SafeView style={styles.centered}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backText}>← Back</Text>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+          style={styles.headerBack}
+        >
+          <Ionicons name="close" size={28} color="#fff" />
         </Pressable>
       </SafeView>
     );
@@ -294,15 +301,21 @@ export default function CategoryDetailScreen() {
       <StatusBar barStyle="light-content" />
       {/* Header */}
       <SafeView style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.headerBack}>
-          <Text style={styles.headerBackText}>← Back</Text>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+          style={styles.headerBack}
+        >
+          <Ionicons name="close" size={28} color="#fff" />
         </Pressable>
 
         <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
           {name}
         </Text>
 
-        <SafeView style={{ width: 64 }} />
+        <SafeView style={{ width: 40 }} />
       </SafeView>
 
       {/* Image Card Area (single full-width image) */}
@@ -397,8 +410,14 @@ export default function CategoryDetailScreen() {
       {/* Fullscreen Modal */}
       <Modal visible={fullscreenOpen} animationType="fade" onRequestClose={closeFullscreen} transparent={false}>
         <SafeView style={styles.fullscreenHeader}>
-          <Pressable onPress={closeFullscreen}>
-            <Text style={styles.fullscreenClose}>✕</Text>
+          <Pressable
+            onPress={closeFullscreen}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Close fullscreen"
+            style={styles.headerBack}
+          >
+            <Ionicons name="close" size={28} color="#fff" />
           </Pressable>
           <Text style={styles.fullscreenTitle}>{name}</Text>
           <SafeView style={{ width: 40 }} />
@@ -552,12 +571,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
-
-
-
-
-
-  headerBack: { padding: 6 },
+  headerBack: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   headerBackText: { color: "#fff", fontSize: 14 },
   headerTitle: { color: "#fff", fontSize: 18, fontWeight: "700", flex: 1, textAlign: "center" },
 
