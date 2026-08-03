@@ -124,6 +124,11 @@ export async function uploadCategoryImage(
   return getDownloadURL(storageRef);
 }
 
+/** Human-readable size helper for admin UI messages */
+export function formatBytes(bytes: number) {
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
 export async function setCategoryCover(categoryId: string, url: string) {
   await updateDoc(doc(db, "categories", categoryId), {
     imageUrl: url,
