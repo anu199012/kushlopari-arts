@@ -51,6 +51,45 @@ const GAP = 12;
 const MIN_CARD_WIDTH = 140;
 const MAX_COLUMNS = 6;
 
+/** Preferred home-page module order (1-based display). Firestore `order` overrides this if set. */
+const MODULE_ORDER = [
+  "Rough Sketching",
+  "Realistic Pencil Potrait",
+  "Blood Art",
+  "WaterColor Art",
+  "Caricature Pencil Art",
+  "Pet Potrait",
+  "Oil's on canvas painting",
+  "Oil's on wood plank",
+  "Pencil on wood Plank",
+  "MarkerDot Art",
+  "NailString Art",
+  "String Art",
+];
+
+const normalizeName = (value: unknown) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+const MODULE_ORDER_INDEX = new Map(
+  MODULE_ORDER.map((name, index) => [normalizeName(name), index + 1])
+);
+
+const getModuleSortKey = (item: any) => {
+  if (typeof item.order === "number") return item.order;
+  const name = normalizeName(
+    item.name ?? item.title ?? item.categoryName ?? item.label ?? item.id
+  );
+  const id = normalizeName(item.id);
+  return (
+    MODULE_ORDER_INDEX.get(name) ??
+    MODULE_ORDER_INDEX.get(id) ??
+    Number.MAX_SAFE_INTEGER
+  );
+};
+
 export default function HomeScreen() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,11 +114,20 @@ export default function HomeScreen() {
         const list: any[] = [];
         snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
 
-        // use imageUrl directly for cards
-        const resolved = list.map((item) => ({
-          ...item,
-          thumbnailImage: item.imageUrl || null,
-        }));
+        // use imageUrl directly for cards; sort by Firestore `order` or MODULE_ORDER
+        const resolved = list
+          .map((item) => ({
+            ...item,
+            thumbnailImage: item.imageUrl || null,
+          }))
+          .sort((a, b) => {
+            const ao = getModuleSortKey(a);
+            const bo = getModuleSortKey(b);
+            if (ao !== bo) return ao - bo;
+            const an = String(a.name ?? a.title ?? a.categoryName ?? a.id);
+            const bn = String(b.name ?? b.title ?? b.categoryName ?? b.id);
+            return an.localeCompare(bn);
+          });
 
         // init float animation values
         resolved.forEach((item) => {
