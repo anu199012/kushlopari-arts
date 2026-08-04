@@ -21,6 +21,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppHeader } from "@/components/app-header";
 import { db } from "../../src/firebaseConfig";
+import {
+  normalizeCategoryData,
+  pickDisplayName,
+} from "../../src/categoryFields";
 
 console.log("Connected projectId:", db.app.options.projectId);
 
@@ -103,8 +107,7 @@ export default function HomeScreen() {
 
   const floatAnims = useRef(new Map<string, Animated.ValueXY>()).current;
 
-  const getItemName = (item: any) =>
-    item.name ?? item.title ?? item.categoryName ?? String(item.id);
+  const getItemName = (item: any) => pickDisplayName(item, String(item.id));
 
   // ========== FETCH DATA ==========
   useEffect(() => {
@@ -112,7 +115,9 @@ export default function HomeScreen() {
       try {
         const snap = await getDocs(collection(db, "categories"));
         const list: any[] = [];
-        snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+        snap.forEach((d) =>
+          list.push(normalizeCategoryData(d.id, d.data() as Record<string, unknown>))
+        );
 
         // use imageUrl directly for cards; sort by Firestore `order` or MODULE_ORDER
         const resolved = list
@@ -124,8 +129,8 @@ export default function HomeScreen() {
             const ao = getModuleSortKey(a);
             const bo = getModuleSortKey(b);
             if (ao !== bo) return ao - bo;
-            const an = String(a.name ?? a.title ?? a.categoryName ?? a.id);
-            const bn = String(b.name ?? b.title ?? b.categoryName ?? b.id);
+            const an = pickDisplayName(a, String(a.id));
+            const bn = pickDisplayName(b, String(b.id));
             return an.localeCompare(bn);
           });
 

@@ -12,6 +12,7 @@ import {
 } from "firebase/storage";
 
 import { db, storage } from "./firebaseConfig";
+import { normalizeCategoryData, pickDisplayName } from "./categoryFields";
 
 export type CategoryDoc = {
   id: string;
@@ -86,10 +87,8 @@ export async function fetchCategories(): Promise<CategoryDoc[]> {
   const snap = await getDocs(collection(db, "categories"));
   const list: CategoryDoc[] = [];
   snap.forEach((d) => {
-    const data = d.data() as Record<string, unknown>;
-    const name = String(
-      data.name ?? data.title ?? data.categoryName ?? data.label ?? d.id
-    );
+    const data = normalizeCategoryData(d.id, d.data() as Record<string, unknown>);
+    const name = pickDisplayName(data, d.id);
     list.push({
       id: d.id,
       name,
@@ -97,6 +96,7 @@ export async function fetchCategories(): Promise<CategoryDoc[]> {
       images: asImageList(data),
       order: typeof data.order === "number" ? data.order : undefined,
       ...data,
+      name,
     });
   });
   return list.sort((a, b) => {
