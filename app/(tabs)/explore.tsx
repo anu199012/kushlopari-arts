@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Linking,
   Platform,
@@ -17,13 +17,98 @@ import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
+const SOCIAL_LINKS = [
+  {
+    label: 'Facebook',
+    url: 'https://www.facebook.com/kushalopari',
+    color: '#1877F2',
+    textColor: '#fff',
+    iconColor: '#fff',
+    icon: 'logo-facebook' as const,
+  },
+  {
+    label: 'Instagram',
+    url: 'https://www.instagram.com/kushalopari/',
+    color: '#E4405F',
+    textColor: '#fff',
+    iconColor: '#fff',
+    icon: 'logo-instagram' as const,
+  },
+  {
+    label: 'Google',
+    url: 'https://www.google.com/viewer/place?mid=/g/11r9vxfc66',
+    color: '#FFFFFF',
+    textColor: '#3c4043',
+    iconColor: '#4285F4',
+    icon: 'logo-google' as const,
+  },
+  {
+    label: 'JustDial',
+    url: 'https://www.justdial.com/Hyderabad/Kushalopari-Arts-Opposite-Sbi-Bank-Sri-Ram-Nagar-Kondapur/040PXX40-XX40-220921151842-E6A7_BZDET',
+    color: '#F15A22',
+    textColor: '#fff',
+    iconColor: '#fff',
+    icon: 'business-outline' as const,
+  },
+];
+
+function clamp(n: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, n));
+}
+
 export default function TabTwoScreen() {
   const { width } = useWindowDimensions();
-  const isSmall = width < 700;
-  // Square artist.png — size header so the full image fits without cropping
-  const headerHeight = Math.min(Math.max(width - 32, 280), 560);
 
-  // Open links in new tab on web, external browser on native
+  const layout = useMemo(() => {
+    // Breakpoints tuned for phone → 13" laptop → large desktop
+    const isPhone = width < 600;
+    const isLaptop = width >= 600 && width < 1280;
+    const isDesktop = width >= 1280;
+
+    const contentMax = isPhone ? width : isLaptop ? 1180 : 1280;
+    const columnWidth = Math.min(width, contentMax);
+    const sidePad = isPhone ? 24 : 40;
+    const innerWidth = Math.max(columnWidth - sidePad, 280);
+    const gap = isPhone ? 10 : 14;
+
+    // Fixed button sizes (no stretch → avoids awkward 3+1 wrap)
+    const buttonWidth = isPhone ? 150 : 160;
+    const buttonHeight = isPhone ? 38 : 42;
+    const fourNeed = buttonWidth * 4 + gap * 3;
+    const columns = innerWidth >= fourNeed ? 4 : 2;
+    const rowMax = buttonWidth * columns + gap * (columns - 1);
+
+    // Image: taller on phone, wider/shorter feel on laptop/desktop
+    const headerHeight = isPhone
+      ? clamp(width * 0.55, 220, 340)
+      : isLaptop
+        ? clamp(columnWidth * 0.34, 320, 420)
+        : clamp(columnWidth * 0.3, 340, 460);
+
+    const descFontSize = isPhone ? 14 : isLaptop ? 15 : 16;
+    const descLineHeight = isPhone ? 20 : isLaptop ? 22 : 24;
+    const descMaxWidth = isPhone ? innerWidth : Math.min(720, innerWidth);
+    const cardPadding = isPhone ? 16 : 24;
+    const fontSize = 13;
+    const iconSize = 16;
+
+    return {
+      contentMax,
+      headerHeight,
+      gap,
+      columns,
+      buttonWidth,
+      buttonHeight,
+      fontSize,
+      iconSize,
+      rowMax,
+      descFontSize,
+      descLineHeight,
+      descMaxWidth,
+      cardPadding,
+    };
+  }, [width]);
+
   const openExternal = (url: string) => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -35,95 +120,123 @@ export default function TabTwoScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
-      <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
-        <AppHeader showBack />
+    <SafeAreaView style={styles.safe}>
+      <View style={[styles.column, { maxWidth: layout.contentMax }]}>
+        <View style={styles.headerPad}>
+          <AppHeader showBack />
+        </View>
+
+        <ParallaxScrollView
+          headerBackgroundColor={{ light: '#000', dark: '#000' }}
+          headerHeight={layout.headerHeight}
+          contentStyle={styles.parallaxContent}
+          headerImage={
+            <View style={[styles.headerWrapper, { height: layout.headerHeight }]}>
+              <Image
+                source={require('@/assets/images/artist.png')}
+                style={styles.headerImage}
+                contentFit="cover"
+                contentPosition="top"
+              />
+              <LinearGradient
+                colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.35)']}
+                style={styles.headerGradient}
+              />
+            </View>
+          }
+        >
+          <ThemedView style={[styles.blackCard, { padding: layout.cardPadding }]}>
+            <ThemedText
+              style={[
+                styles.description,
+                {
+                  fontSize: layout.descFontSize,
+                  lineHeight: layout.descLineHeight,
+                  maxWidth: layout.descMaxWidth,
+                },
+              ]}
+            >
+              I was passionate about art and craft since my childhood days and this led me to
+              start my own venture. I am handling all the aspects of this business.
+              Open 24 hours.
+            </ThemedText>
+
+            <View
+              style={[
+                styles.socialRow,
+                {
+                  gap: layout.gap,
+                  width: layout.rowMax,
+                },
+              ]}
+            >
+              {SOCIAL_LINKS.map((link) => (
+                <TouchableOpacity
+                  key={link.label}
+                  style={[
+                    styles.socialButton,
+                    {
+                      backgroundColor: link.color,
+                      width: layout.buttonWidth,
+                      height: layout.buttonHeight,
+                    },
+                    link.label === 'Google' && styles.googleButton,
+                  ]}
+                  onPress={() => openExternal(link.url)}
+                  activeOpacity={0.85}
+                  accessibilityLabel={`Open ${link.label}`}
+                >
+                  <Ionicons
+                    name={link.icon}
+                    size={layout.iconSize}
+                    color={link.iconColor}
+                    style={styles.iconLeft}
+                  />
+                  <ThemedText
+                    style={[
+                      styles.socialText,
+                      { fontSize: layout.fontSize, color: link.textColor },
+                    ]}
+                  >
+                    {link.label}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ThemedView>
+        </ParallaxScrollView>
       </View>
-      <ParallaxScrollView
-      headerBackgroundColor={{ light: '#000', dark: '#000' }}
-      headerHeight={headerHeight}
-      headerImage={
-        <View style={[styles.headerWrapper, { height: headerHeight }]}>
-          <Image
-            source={require('@/assets/images/artist.png')}
-            style={styles.headerImage}
-            contentFit="contain"
-          />
-          <LinearGradient
-            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.35)']}
-            style={styles.headerGradient}
-          />
-        </View>
-      }
-    >
-      {/* Black info card */}
-      <ThemedView style={styles.blackCard}>
-        <ThemedText style={styles.description}>
-          I was passionate about art and craft since my childhood days and this led me to
-          start my own venture. I am handling all the aspects of this business.
-          Open 24 hours.
-        </ThemedText>
-
-        {/* Social Buttons: responsive */}
-        <View style={[styles.socialRow, isSmall ? styles.socialRowStack : null]}>
-          <TouchableOpacity
-            style={[styles.socialButton, { backgroundColor: '#1877F2' }, isSmall ? styles.socialButtonFull : null]}
-            onPress={() => openExternal('https://www.facebook.com/kushalopari')}
-            activeOpacity={0.85}
-            accessibilityLabel="Open Facebook"
-          >
-            <Ionicons name="logo-facebook" size={14} color="#fff" style={styles.iconLeft} />
-            <ThemedText style={styles.socialText}>Facebook</ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.socialButton, { backgroundColor: '#E4405F' }, isSmall ? styles.socialButtonFull : null]}
-            onPress={() => openExternal('https://www.instagram.com/kushalopari/')}
-            activeOpacity={0.85}
-            accessibilityLabel="Open Instagram"
-          >
-            <Ionicons name="logo-instagram" size={14} color="#fff" style={styles.iconLeft} />
-            <ThemedText style={styles.socialText}>Instagram</ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.socialButton, { backgroundColor: '#4285F4' }, isSmall ? styles.socialButtonFull : null]}
-            onPress={() => openExternal('https://www.google.com/viewer/place?mid=/g/11r9vxfc66')}
-            activeOpacity={0.85}
-            accessibilityLabel="Open Google"
-          >
-            <Ionicons name="location-outline" size={14} color="#fff" style={styles.iconLeft} />
-            <ThemedText style={styles.socialText}>Google</ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.socialButton, { backgroundColor: '#F15A22' }, isSmall ? styles.socialButtonFull : null]}
-            onPress={() =>
-              openExternal(
-                'https://www.justdial.com/Hyderabad/Kushalopari-Arts-Opposite-Sbi-Bank-Sri-Ram-Nagar-Kondapur/040PXX40-XX40-220921151842-E6A7_BZDET'
-              )
-            }
-            activeOpacity={0.85}
-            accessibilityLabel="Open JustDial"
-          >
-            <Ionicons name="business-outline" size={14} color="#fff" style={styles.iconLeft} />
-            <ThemedText style={styles.socialText}>JustDial</ThemedText>
-          </TouchableOpacity>
-        </View>
-      </ThemedView>
-    </ParallaxScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  /* header wrapper used so gradient can overlay the image */
+  safe: {
+    flex: 1,
+    backgroundColor: '#000',
+    alignItems: 'center',
+  },
+  column: {
+    flex: 1,
+    width: '100%',
+  },
+  headerPad: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  parallaxContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 28,
+    alignItems: 'center',
+  },
   headerWrapper: {
     width: '100%',
     position: 'relative',
     backgroundColor: '#000',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    overflow: 'hidden',
   },
   headerImage: {
     width: '100%',
@@ -136,77 +249,44 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: '30%',
   },
-
-  /* Black card section */
   blackCard: {
-    backgroundColor: '#000',
-    padding: 22,
-    marginHorizontal: 12,
-    marginVertical: 18,
+    backgroundColor: '#111',
+    width: '100%',
+    maxWidth: 1100,
+    marginVertical: 8,
     borderRadius: 18,
-    // subtle gold border for premium look
     borderWidth: 1,
-    borderColor: 'rgba(184,134,11,0.06)',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    borderColor: 'rgba(184,134,11,0.08)',
+    alignItems: 'center',
   },
-
-  artistName: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-
-  subtitle: {
-    color: '#cfcfcf',
-    marginBottom: 12,
-  },
-
   description: {
     color: '#e6e6e6',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 16,
+    textAlign: 'center',
+    marginBottom: 18,
+    alignSelf: 'center',
   },
-
-  /* Social row */
   socialRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    gap: 8,
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
-  socialRowStack: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-
   socialButton: {
-    flexGrow: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 7,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: '#1f1f1f',
     justifyContent: 'center',
+    borderRadius: 12,
+    flexGrow: 0,
+    flexShrink: 0,
   },
-  socialButtonFull: {
-    width: 'auto',
+  googleButton: {
+    borderWidth: 1,
+    borderColor: '#dadce0',
   },
-
   iconLeft: {
-    marginRight: 6,
+    marginRight: 8,
   },
-
   socialText: {
-    color: '#fff',
     fontWeight: '600',
-    fontSize: 12,
   },
 });

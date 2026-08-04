@@ -1,5 +1,5 @@
 import type { PropsWithChildren, ReactElement } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedRef,
@@ -18,6 +18,7 @@ type Props = PropsWithChildren<{
   headerBackgroundColor: { dark: string; light: string };
   /** Optional header height so full images are not cropped */
   headerHeight?: number;
+  contentStyle?: StyleProp<ViewStyle>;
 }>;
 
 export default function ParallaxScrollView({
@@ -25,6 +26,7 @@ export default function ParallaxScrollView({
   headerImage,
   headerBackgroundColor,
   headerHeight = DEFAULT_HEADER_HEIGHT,
+  contentStyle,
 }: Props) {
   const backgroundColor = useThemeColor({}, 'background');
   const colorScheme = useColorScheme() ?? 'light';
@@ -60,7 +62,7 @@ export default function ParallaxScrollView({
         ]}>
         {headerImage}
       </Animated.View>
-      <ThemedView style={styles.content}>{children}</ThemedView>
+      <ThemedView style={[styles.content, contentStyle]}>{children}</ThemedView>
     </Animated.ScrollView>
   );
 }
