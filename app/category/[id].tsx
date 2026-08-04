@@ -30,6 +30,11 @@ import {
 } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { db } from "../../src/firebaseConfig";
+import {
+  normalizeCategoryData,
+  pickDescription,
+  pickDisplayName,
+} from "../../src/categoryFields";
 
 
 
@@ -120,10 +125,13 @@ export default function CategoryDetailScreen() {
         }
 
 
-        const data = snap.data();
+        const data = normalizeCategoryData(
+          snap.id,
+          snap.data() as Record<string, unknown>
+        );
         if (!mounted) return;
 
-        setCategory({ id: snap.id, ...data });
+        setCategory(data);
 
         const rawImages = data.images ?? data.image ?? data.imagesArray;
         let imagesArray: string[] =
@@ -291,8 +299,8 @@ export default function CategoryDetailScreen() {
     );
   }
 
-  const name = category.name ?? category.title ?? category.categoryName ?? category.label ?? "";
-  const description = category.description ?? category.details ?? category.caption ?? "";
+  const name = pickDisplayName(category, String(category.id));
+  const description = pickDescription(category);
 
   const imagesForList = imageUrls && imageUrls.length ? imageUrls : [];
 
