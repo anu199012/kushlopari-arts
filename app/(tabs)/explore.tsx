@@ -72,7 +72,7 @@ export default function TabTwoScreen() {
             activeOpacity={0.85}
             accessibilityLabel="Open Facebook"
           >
-            <Ionicons name="logo-facebook" size={18} color="#fff" style={styles.iconLeft} />
+            <Ionicons name="logo-facebook" size={14} color="#fff" style={styles.iconLeft} />
             <ThemedText style={styles.socialText}>Facebook</ThemedText>
           </TouchableOpacity>
 
@@ -82,7 +82,7 @@ export default function TabTwoScreen() {
             activeOpacity={0.85}
             accessibilityLabel="Open Instagram"
           >
-            <Ionicons name="logo-instagram" size={18} color="#fff" style={styles.iconLeft} />
+            <Ionicons name="logo-instagram" size={14} color="#fff" style={styles.iconLeft} />
             <ThemedText style={styles.socialText}>Instagram</ThemedText>
           </TouchableOpacity>
 
@@ -92,7 +92,7 @@ export default function TabTwoScreen() {
             activeOpacity={0.85}
             accessibilityLabel="Open Google"
           >
-            <Ionicons name="location-outline" size={18} color="#fff" style={styles.iconLeft} />
+            <Ionicons name="location-outline" size={14} color="#fff" style={styles.iconLeft} />
             <ThemedText style={styles.socialText}>Google</ThemedText>
           </TouchableOpacity>
 
@@ -106,7 +106,7 @@ export default function TabTwoScreen() {
             activeOpacity={0.85}
             accessibilityLabel="Open JustDial"
           >
-            <Ionicons name="business-outline" size={18} color="#fff" style={styles.iconLeft} />
+            <Ionicons name="business-outline" size={14} color="#fff" style={styles.iconLeft} />
             <ThemedText style={styles.socialText}>JustDial</ThemedText>
           </TouchableOpacity>
         </View>
@@ -177,37 +177,36 @@ const styles = StyleSheet.create({
   socialRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
+    justifyContent: 'flex-start',
+    gap: 8,
   },
   socialRowStack: {
-    flexDirection: 'column',
-    gap: 10,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
 
   socialButton: {
-    flexGrow: 1,
-    flexBasis: 140,
+    flexGrow: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    minWidth: 120,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderRadius: 8,
     backgroundColor: '#1f1f1f',
     justifyContent: 'center',
   },
   socialButtonFull: {
-    width: '100%',
+    width: 'auto',
   },
 
   iconLeft: {
-    marginRight: 10,
+    marginRight: 6,
   },
 
   socialText: {
     color: '#fff',
     fontWeight: '600',
-    fontSize: 15,
+    fontSize: 12,
   },
 });
