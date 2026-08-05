@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { BrandSplash } from '@/components/brand-splash';
 import { OrderButton } from '@/components/order-button';
+import { initAnalytics, logPageView } from '@/src/firebaseConfig';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -32,6 +33,16 @@ export default function CategoryLayout() {
       setShowBrandSplash(false);
     }
   }, [isAdminRoute]);
+
+  // Start Analytics + log each route as a page view
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
+  useEffect(() => {
+    if (!pathname) return;
+    logPageView(pathname);
+  }, [pathname]);
 
   const onBrandSplashFinish = useCallback(() => {
     setShowBrandSplash(false);
